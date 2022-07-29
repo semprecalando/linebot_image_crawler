@@ -1,0 +1,18 @@
+{
+  "name": "linebot_image_crawler",
+  "dockerFile": "./Dockerfile",
+  "mounts": [ //ホストのファイルをコンテナと共有する
+      "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/root/.aws,type=bind"
+  ],
+  "extensions": [ //コンテナ内でインストールするVS Codeの拡張機能ID
+      "ms-python.python",
+      "visualstudioexptteam.vscodeintellicode",
+      "esbenp.prettier-vscode",
+      "steoates.autoimport"
+  ],
+  "settings": {
+      "python.pythonPath": "/usr/local/bin/python3",
+      "typescript.tsdk": "./node_modules/typescript/lib"
+  },
+  //"workspaceFolder": "/workspace"
+}
