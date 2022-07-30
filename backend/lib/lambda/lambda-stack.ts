@@ -3,13 +3,6 @@ import { AssetCode, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 
 const arrowOrigin = '*';
 
-export const createHelloLambda = (stack: Stack) => new Function(stack, 'hello-world', {
-  code: new AssetCode('lib/lambda/hello-world'),
-  handler: 'hello-world.handler',
-  runtime: Runtime.NODEJS_14_X,
-  environment: {},
-});
-
 export const createImageCrawlerLambda = (stack: Stack) => new Function(stack, 'image-crawler', {
   code: new AssetCode('lib/lambda/image-crawler'),
   handler: 'image-crawler.handler',

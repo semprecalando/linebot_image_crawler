@@ -1,6 +1,6 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { createHelloLambda, createImageCrawlerLambda } from './lambda/lambda-stack';
+import { createImageCrawlerLambda } from './lambda/lambda-stack';
 import { createWebhookAPI } from './api-gw/line-webhook-api';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
