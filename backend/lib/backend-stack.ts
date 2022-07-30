@@ -1,6 +1,7 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { createHelloLambda } from './lambda/lambda-stack';
+import { createHelloLambda, createImageCrawlerLambda } from './lambda/lambda-stack';
+import { createWebhookAPI } from './api-gw/line-webhook-api';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class LineBotImageCrawlerStack extends Stack {
@@ -8,6 +9,9 @@ export class LineBotImageCrawlerStack extends Stack {
     super(scope, id, props);
 
     const helloLambda = createHelloLambda(this);
+    const imageCrawlerLambda = createImageCrawlerLambda(this);
+
+    const webhookEventAPI = createWebhookAPI(this, imageCrawlerLambda);
     // The code that defines your stack goes here
 
     // example resource

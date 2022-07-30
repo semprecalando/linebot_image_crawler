@@ -14,5 +14,6 @@
       "python.pythonPath": "/usr/local/bin/python3",
       "typescript.tsdk": "./node_modules/typescript/lib"
   },
+  "postCreateCommand": "apt-get install -y git"
   //"workspaceFolder": "/workspace"
 }

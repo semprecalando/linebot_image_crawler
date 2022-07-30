@@ -34,6 +34,8 @@
     "@aws-cdk/core:target-partitions": [
       "aws",
       "aws-cn"
-    ]
+    ],
+    "lineAccessToken": "",
+    "lineAccessSecret": ""
   }
 }

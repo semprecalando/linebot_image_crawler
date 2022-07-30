@@ -1,15 +1,10 @@
 {
   "name": "backend",
   "version": "0.1.0",
-  "bin": {
-    "backend": "bin/backend.js"
-  },
   "scripts": {
     "build": "tsc",
-    "build_lambda": "tsc lib/lambda/*/*.ts",
     "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
+    "test": "jest"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
@@ -17,13 +12,10 @@
     "@types/prettier": "2.6.0",
     "jest": "^27.5.1",
     "ts-jest": "^27.1.4",
-    "aws-cdk": "2.32.0",
     "ts-node": "^10.8.1",
     "typescript": "~3.9.7"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.32.0",
-    "constructs": "^10.0.0",
-    "source-map-support": "^0.5.21"
+    "@line/bot-sdk": "^7.5.0"
   }
 }
