@@ -1,5 +1,5 @@
 import * as line from "@line/bot-sdk";
-import { TextMessage, WebhookEvent } from "@line/bot-sdk";
+import { Message, TextMessage, WebhookRequestBody } from "@line/bot-sdk";
 
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
 const LINE_ACCESS_SECRET = process.env.LINE_ACCESS_SECRET || "";
@@ -19,17 +19,25 @@ type Response = {
 
 export const handler = async (event: any = {}): Promise<any> => {
 
-  const signature = event["headers"]["x-line-signature"]
-  const body = event["body"]
-
+  // Todo: 本格的に使う場合は消す
   console.log(event)
-  console.log(body)
   const res: Response = {
     isBase64Encoded: false,
     statusCode: 200,
     headers: {},
     body: ""
   }
+
+  const webhookEvent: WebhookRequestBody = JSON.parse(event["body"]);
+  for (const event of webhookEvent.events) {
+    // テキストメッセージの場合おうむ返しする
+    if (event.type == "message" && event.message.type == "text") {
+      const replyToken = event.replyToken;
+      const message: TextMessage = {type: "text",text: event.message.text};
+      await LINE_CLIENT.replyMessage(replyToken, message);
+    }
+  }
+
   res.body = "hello world!";
   return await res;
 };

@@ -8,7 +8,6 @@ export class LineBotImageCrawlerStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const helloLambda = createHelloLambda(this);
     const imageCrawlerLambda = createImageCrawlerLambda(this);
 
     const webhookEventAPI = createWebhookAPI(this, imageCrawlerLambda);
