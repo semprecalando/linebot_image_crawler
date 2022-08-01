@@ -34,6 +34,7 @@ const replyText = async(event: line.MessageEvent, text: string) => {
 }
 
 const putImage = async(event: line.MessageEvent) => {
+  // Todo: ファイル名に現在時刻を付与
   const content = await LINE_CLIENT.getMessageContent(event.message.id);
   const parallelUploads3 = new Upload({
     client: s3Client,
@@ -53,8 +54,6 @@ const putImage = async(event: line.MessageEvent) => {
 
 export const handler = async (event: any = {}): Promise<any> => {
 
-  // Todo: 本格的に使う場合は消す
-  console.log(event);
   const res: Response = {
     isBase64Encoded: false,
     statusCode: 200,
@@ -62,23 +61,27 @@ export const handler = async (event: any = {}): Promise<any> => {
     body: ""
   }
 
+  // Todo: リクエスト検証
   const webhookEvent: WebhookRequestBody = JSON.parse(event["body"]);
   for (const event of webhookEvent.events) {
-    // テキストメッセージの場合おうむ返しする
     if (event.type == "message" && event.message.type == "text") {
       //await replyText(event, event.message.text)
       await replyText(event, "話しかけてくれてありがとうございます！でもお返事はできないんです…");
     }
     else if (event.type == "message" && event.message.type == "image") {
-      // Todo: 画像が受け取れなかった時のエラーメッセージ（awaitをキャッチする）
-      await putImage(event);
-      await replyText(event, "画像を受け取りました！");
+      try {
+        await putImage(event);
+        await replyText(event, "画像を受け取りました！");
+      } catch (error) {
+        console.log(error);
+        await replyText(event, "画像を受け取れませんでした…もう一度送信してみてください");
+      }
     }
     else if (event.type == "message") {
       await replyText(event, "すいません、画像以外は対応していません…");
     }
   }
 
-  res.body = "hello world!";
+  res.body = "finish";
   return await res;
 };
