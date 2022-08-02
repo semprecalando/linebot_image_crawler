@@ -1,0 +1,13 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.137.0",
+    "@aws-sdk/client-s3": "^3.137.0"
+  }
+}

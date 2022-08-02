@@ -14,3 +14,18 @@ export const createImageCrowlerRole = (stack: Stack) => {
   );
   return imageCrowlerRole;
 }
+
+export const createFaceMatcherRole = (stack: Stack) => {
+  const faceMatcherRole = new Role(
+    stack,
+    "faceMatcherRole",
+    {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+        ManagedPolicy.fromAwsManagedPolicyName('AmazonRekognitionReadOnlyAccess')
+      ]
+    },
+  );
+  return faceMatcherRole;
+}
