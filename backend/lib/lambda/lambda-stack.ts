@@ -2,17 +2,20 @@ import { Role } from 'aws-cdk-lib/aws-iam';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
 import { Duration, Stack } from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { AssetCode, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
 const arrowOrigin = '*';
 
-export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new Function(stack, 'image-crawler', {
-  code: new AssetCode('lib/lambda/image-crawler'),
-  handler: 'image-crawler.handler',
+export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new NodejsFunction(stack, 'image-crawler', {
+  entry: 'lib/lambda/image-crawler/image-crawler.ts',
   runtime: Runtime.NODEJS_16_X,
   timeout: Duration.seconds(10),
   role: imageCrowlerRole,
+  bundling: {
+    nodeModules: ['sharp'],
+  },
   environment: {
     ALLOW_ORIGIN: arrowOrigin,
     LINE_ACCESS_TOKEN: stack.node.tryGetContext('lineAccessToken'),
@@ -22,9 +25,8 @@ export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imag
 });
 
 export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceBucket: Bucket, dynamoTable: Table, faceMatcherRole: Role, imageDir?: string) => {
-  const lambda = new Function(stack, 'face-matcher', {
-    code: new AssetCode('lib/lambda/face-matcher'),
-    handler: 'face-matcher.handler',
+  const lambda = new NodejsFunction(stack, 'face-matcher', {
+    entry: 'lib/lambda/face-matcher/face-matcher.ts',
     runtime: Runtime.NODEJS_16_X,
     timeout: Duration.seconds(10),
     role: faceMatcherRole,

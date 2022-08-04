@@ -1,5 +1,5 @@
 import { Readable, Stream } from "stream";
-import * as sharp from "sharp";
+import sharp from 'sharp';
 
 export type Response = {
   isBase64Encoded: Boolean,
