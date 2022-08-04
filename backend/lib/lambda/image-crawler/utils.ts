@@ -17,7 +17,12 @@ export const stream2buffer = async (stream: Stream): Promise<Buffer> => {
   });
 }
 
-export const createThumbnailFromReadable = async(tmpFilePath: string, heightPixel: number) => {
+export const createThumbnailFromReadable = async(readable: Readable, heightPixel: number) => {
+  const result = await sharp(await stream2buffer(readable)).resize( {height: heightPixel} ).toBuffer()
+  return result;
+}
+
+export const createThumbnailFromFile = async(tmpFilePath: string, heightPixel: number) => {
   const result = await sharp(tmpFilePath).resize( {height: heightPixel} ).toBuffer()
   return result;
 }

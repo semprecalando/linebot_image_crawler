@@ -30,7 +30,7 @@ const replyText = async(event: line.MessageEvent, text: string) => {
   await lineClient.replyMessage(replyToken, message);
 }
 
-const putImage = async(content: string | Buffer, key: string) => {
+const putImage = async(content: Buffer | Readable, key: string) => {
   // Todo: ファイル名に現在時刻を付与
   const parallelUploads3 = new Upload({
     client: s3Client,
@@ -50,7 +50,6 @@ const putImage = async(content: string | Buffer, key: string) => {
 
 export const handler = async (event: any = {}): Promise<any> => {
 
-  console.log(JSON.stringify(event));
   const res: Response = {
     isBase64Encoded: false,
     statusCode: 200,
@@ -66,19 +65,22 @@ export const handler = async (event: any = {}): Promise<any> => {
       await replyText(event, "話しかけてくれてありがとうございます！でもお返事はできないんです…");
     }
     else if (event.type == "message" && event.message.type == "image") {
+      const tmpFilePath = `/tmp/${event.message.type}_image.jpg`;
       try {
-        const content = await lineClient.getMessageContent(event.message.id);
-        const tmpFilePath = "/tmp/tmp.jpg";
-        fs.writeFileSync(tmpFilePath, await stream2buffer(content));
-        console.log("write file");
-        await putImage(tmpFilePath, `${IMAGE_DIR}/${event.message.id}_image.jpg`);
-        const thumbnail = await createThumbnailFromReadable(tmpFilePath, 200);
+        const putContent = await lineClient.getMessageContent(event.message.id);
+        await putImage(putContent, `${IMAGE_DIR}/${event.message.id}_image.jpg`);
+        // Todo: サムネイルでもおなじcontentを使い回す(できるなら)
+        const thubnailContent = await lineClient.getMessageContent(event.message.id);
+        const thumbnail = await createThumbnailFromReadable(thubnailContent, 200);
         console.log("create thumb");
         await putImage(thumbnail, `${THUMBNAIL_DIR}/${event.message.id}_image.jpg`);
         await replyText(event, "画像を受け取りました！");
       } catch (error) {
         console.log(error);
         await replyText(event, "画像を受け取れませんでした…もう一度送信してみてください");
+      } finally {
+        // Todo: ファイルの存在確認
+        fs.unlinkSync(tmpFilePath);
       }
     }
     else if (event.type == "message") {
