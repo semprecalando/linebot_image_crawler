@@ -21,7 +21,7 @@ export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imag
   },
 });
 
-export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceBucket: Bucket, dynamoTable: Table, faceMatcherRole: Role) => {
+export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceBucket: Bucket, dynamoTable: Table, faceMatcherRole: Role, imageDir?: string) => {
   const lambda = new Function(stack, 'face-matcher', {
     code: new AssetCode('lib/lambda/face-matcher'),
     handler: 'face-matcher.handler',
@@ -36,6 +36,7 @@ export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceB
   });
   lambda.addEventSource(
     new S3EventSource(imageBucket, {
+      filters: [{prefix: imageDir ? `${imageDir}/` : "images/"}],
       events: [EventType.OBJECT_CREATED]
     })
   );

@@ -2,47 +2,43 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from '@aws-sdk/client-s3';
 import * as line from "@line/bot-sdk";
 import { TextMessage, WebhookRequestBody } from "@line/bot-sdk";
+import { createThumbnailFromReadable, Response, stream2buffer } from "./utils";
+import { Readable } from "stream";
+import * as fs from "fs";
 
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
 const LINE_ACCESS_SECRET = process.env.LINE_ACCESS_SECRET || "";
 const IMAGE_BUCKET_NAME = process.env.IMAGE_BUCKET_NAME || "";
 const IMAGE_DIR = process.env.IMAGE_DIR || "images";
+const THUMBNAIL_DIR = process.env.IMAGE_DIR || "thumbnails";
 
 const CONFIG = {
   channelAccessToken:LINE_ACCESS_TOKEN,
   channelSecret: LINE_ACCESS_SECRET,
 }
-const LINE_CLIENT = new line.Client(CONFIG);
+const lineClient = new line.Client(CONFIG);
 
 const s3Client = new S3Client({
   region: 'ap-northeast-1'
 })
-
-type Response = {
-  isBase64Encoded: Boolean,
-  statusCode: Number,
-  headers: {},
-  body: String
-}
 
 // Todo: async/awaitのエラーハンドリング
 
 const replyText = async(event: line.MessageEvent, text: string) => {
   const replyToken = event.replyToken;
   const message: TextMessage = {type: "text",text: text};
-  await LINE_CLIENT.replyMessage(replyToken, message);
+  await lineClient.replyMessage(replyToken, message);
 }
 
-const putImage = async(event: line.MessageEvent) => {
+const putImage = async(content: string | Buffer, key: string) => {
   // Todo: ファイル名に現在時刻を付与
-  const content = await LINE_CLIENT.getMessageContent(event.message.id);
   const parallelUploads3 = new Upload({
     client: s3Client,
     queueSize: 4, // optional concurrency configuration
     leavePartsOnError: false, // optional manually handle dropped parts
     params: {
       Bucket: IMAGE_BUCKET_NAME,
-      Key: `${IMAGE_DIR}/${event.message.id}_image.jpg`,
+      Key: key,
       Body: content
     },
   });
@@ -54,6 +50,7 @@ const putImage = async(event: line.MessageEvent) => {
 
 export const handler = async (event: any = {}): Promise<any> => {
 
+  console.log(JSON.stringify(event));
   const res: Response = {
     isBase64Encoded: false,
     statusCode: 200,
@@ -70,7 +67,14 @@ export const handler = async (event: any = {}): Promise<any> => {
     }
     else if (event.type == "message" && event.message.type == "image") {
       try {
-        await putImage(event);
+        const content = await lineClient.getMessageContent(event.message.id);
+        const tmpFilePath = "/tmp/tmp.jpg";
+        fs.writeFileSync(tmpFilePath, await stream2buffer(content));
+        console.log("write file");
+        await putImage(tmpFilePath, `${IMAGE_DIR}/${event.message.id}_image.jpg`);
+        const thumbnail = await createThumbnailFromReadable(tmpFilePath, 200);
+        console.log("create thumb");
+        await putImage(thumbnail, `${THUMBNAIL_DIR}/${event.message.id}_image.jpg`);
         await replyText(event, "画像を受け取りました！");
       } catch (error) {
         console.log(error);
