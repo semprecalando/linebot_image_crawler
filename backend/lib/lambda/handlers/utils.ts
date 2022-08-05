@@ -1,11 +1,16 @@
 import { Readable, Stream } from "stream";
-import sharp from 'sharp';
+import sharp from "sharp";
 
 export type Response = {
   isBase64Encoded: Boolean,
   statusCode: Number,
   headers: {},
   body: String
+}
+
+export const getNowJSTDate = () => {
+  const now = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000));
+  return now.toISOString().split("T")[0];
 }
 
 export const stream2buffer = async (stream: Stream): Promise<Buffer> => {
