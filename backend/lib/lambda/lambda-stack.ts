@@ -9,7 +9,7 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 const arrowOrigin = '*';
 
 export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new NodejsFunction(stack, 'image-crawler', {
-  entry: 'lib/lambda/image-crawler/image-crawler.ts',
+  entry: 'lib/lambda/handlers/image-crawler.ts',
   runtime: Runtime.NODEJS_16_X,
   timeout: Duration.seconds(10),
   role: imageCrowlerRole,
@@ -26,7 +26,7 @@ export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imag
 
 export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceBucket: Bucket, dynamoTable: Table, faceMatcherRole: Role, imageDir?: string) => {
   const lambda = new NodejsFunction(stack, 'face-matcher', {
-    entry: 'lib/lambda/face-matcher/face-matcher.ts',
+    entry: 'lib/lambda/handlers/face-matcher.ts',
     runtime: Runtime.NODEJS_16_X,
     timeout: Duration.seconds(10),
     role: faceMatcherRole,
