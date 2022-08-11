@@ -54,20 +54,20 @@ const checkSignature = (event: any) => {
   }
 }
 
-export const handler = async (event: any = {}): Promise<any> => {
+const processWebhookEvents = async (events: line.WebhookEvent[]) => {
+  const recieveStatus = {
+    isRecieveImage: false,
+    isRecieveText: false,
+    isRecieveOther: false,
+    isRecieveImageError: false
+  };
 
-  const res: Response = {
-    isBase64Encoded: false,
-    statusCode: 200,
-    headers: {},
-    body: ""
-  }
-
-  const webhookEvent: WebhookRequestBody = JSON.parse(event["body"]);
-  checkSignature(event);
-  for (const event of webhookEvent.events) {
-    if (event.type == "message" && event.message.type == "text") {
+  for (const event of events) {
+    // recieveStatusでメッセージタイプの重複を管理し、各ステータスごとにメッセージを返却するのは一度だけとする
+    // Todo: dynamoとimageSet.idを利用した連投画像ステータス管理（現状は連投画像が分割して送信された場合、分割された数だけメッセージを返してしまう）
+    if (event.type == "message" && event.message.type == "text" && !recieveStatus.isRecieveText) {
       await replyText(event, "話しかけてくれてありがとうございます！でもお返事はできないんです…");
+      recieveStatus.isRecieveText = true;
     }
     else if (event.type == "message" && event.message.type == "image") {
       // 現在日時(JST)を取得して画像パスに含める
@@ -79,16 +79,34 @@ export const handler = async (event: any = {}): Promise<any> => {
         const thubnailContent = await lineClient.getMessageContent(event.message.id);
         const thumbnail = await createThumbnailFromReadable(thubnailContent, 200);
         await putImage(thumbnail, `${THUMBNAIL_DIR}/${imageFileName}`);
-        await replyText(event, "画像を受け取りました！");
+        if (!recieveStatus.isRecieveImage) await replyText(event, "画像を受け取りました！");
+        recieveStatus.isRecieveImage = true;
       } catch (error) {
         console.log(error);
-        await replyText(event, "画像を受け取れませんでした…もう一度送信してみてください");
+        if (!recieveStatus.isRecieveImageError) await replyText(event, "画像の一部を受け取れませんでした…もう一度送信してみてください");
+        recieveStatus.isRecieveImageError = true;
       }
     }
-    else if (event.type == "message") {
-      await replyText(event, "すいません、画像以外は対応していません…");
+    else if (event.type == "message" && !recieveStatus.isRecieveOther) {
+      await replyText(event, "画像以外は対応していないんです…すいません");
+      recieveStatus.isRecieveOther = true;
     }
   }
+}
+
+
+export const handler = async (event: any = {}): Promise<any> => {
+
+  const res: Response = {
+    isBase64Encoded: false,
+    statusCode: 200,
+    headers: {},
+    body: ""
+  }
+
+  const webhookEvent: WebhookRequestBody = JSON.parse(event["body"]);
+  checkSignature(event);
+  await processWebhookEvents(webhookEvent.events);
 
   res.body = "finish";
   return res;
