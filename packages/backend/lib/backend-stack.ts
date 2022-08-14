@@ -4,8 +4,9 @@ import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { createImageCrawlerLambda, createFaceMatcherLambda } from './lambda/lambda-stack';
 import { createWebhookAPI } from './api-gw/line-webhook-api';
-import { createImageBucket, createFaceBucket } from './s3/bucket-stack';
+import { createImageBucket, createFaceBucket, setHostingImagePolicy } from './s3/bucket-stack';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { createHostingCloudFront, createHostingOAI } from './cloudfront/hosting-edge';
 
 export class LineBotImageCrawlerStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -30,5 +31,10 @@ export class LineBotImageCrawlerStack extends Stack {
       sources: [Source.asset('./faceImages')],
       destinationBucket: faceSourceBucket
     });
+
+    // 静的コンテンツ配信用の設定
+    const oai = createHostingOAI(this);
+    const hostingCloudFront = createHostingCloudFront(this, imageBucket, oai);
+    setHostingImagePolicy(oai, imageBucket);
   }
 }

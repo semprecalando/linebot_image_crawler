@@ -1,8 +1,10 @@
 import React from 'react';
+import { FC } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import GalleryPage from './pages/GalleryPage';
 
-function App() {
+const App: FC = () => {
   return (
     <div className="App">
       <header className="App-header">
@@ -19,6 +21,7 @@ function App() {
           Learn React
         </a>
       </header>
+      <GalleryPage />
     </div>
   );
 }

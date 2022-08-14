@@ -8,3 +8,6 @@
 
 aws cdkを利用したバックエンド環境修正を行いたいとき
 > yarn workspace bakcend cdk "コマンド"
+
+フロントエンド(Reactアプリ)の修正を行いたいとき
+> yarn workspace frontend "コマンド"

@@ -1,6 +1,7 @@
 import { Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
-import { Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
-import { Bucket } from "aws-cdk-lib/aws-s3";
+import { CloudFrontWebDistribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
+import { CanonicalUserPrincipal, Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
+import { Bucket, HttpMethods } from "aws-cdk-lib/aws-s3";
 
 export const createImageBucket = (stack: Stack, allowPutRoles: Role[], allowGetRoles: Role[]) => {
   const bucket = new Bucket(stack, "line_crawel_image",{
@@ -10,7 +11,17 @@ export const createImageBucket = (stack: Stack, allowPutRoles: Role[], allowGetR
         id: 'delete-multipart-garbage',
         abortIncompleteMultipartUploadAfter: Duration.days(6)
       }
-    ]
+    ],
+    // cors設定は開発時のみ利用する
+    cors: [
+      {
+        allowedMethods: [
+          HttpMethods.GET,
+        ],
+        allowedOrigins: ['http://localhost:3000'],
+        allowedHeaders: ['*'],
+      },
+    ],
   });
   bucket.addToResourcePolicy(
     new PolicyStatement({
@@ -51,3 +62,24 @@ export const createFaceBucket = (stack: Stack, allowGetRoles: Role[]) => {
   );
   return bucket;
 };
+
+export const setHostingImagePolicy = (oai: OriginAccessIdentity, bucket: Bucket) => {
+  bucket.grantRead(oai);
+  return bucket;
+}
+
+export const setHostingSPAPolicy = (oai: OriginAccessIdentity, bucket: Bucket) => {
+  const myBucketPolicy = new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ['s3:GetObject'],
+    principals: [
+      new CanonicalUserPrincipal(
+        oai.cloudFrontOriginAccessIdentityS3CanonicalUserId
+      ),
+    ],
+    resources: [bucket.bucketArn + '/*'],
+  });
+  bucket.addToResourcePolicy(myBucketPolicy);
+
+  return bucket;
+}
