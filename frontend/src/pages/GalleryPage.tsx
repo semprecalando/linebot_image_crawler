@@ -4,17 +4,15 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Typography, Grid } from '@mui/material';
 import { getImageThumbnailList } from '../lib/dynamoAPI';
 
-const constellationReplacer = (substring: string) =>
-  //`${process.env.PUBLIC_URL}/img/constellations/${substring}.jpg`;
+const imageNameReplacer = (substring: string) =>
   `${CLOUDFRONT_URL}/thumbnails/${substring}`;
-const createImageBox = (constellation: string) => {
-  const imagePath = constellationReplacer(constellation);
+const createImageBox = (name: string) => {
+  const imagePath = imageNameReplacer(name);
 
   return (
-    <Grid item key={constellation} xs={12} md={4} sx={{ padding: 3 }}>
+    <Grid item key={name} xs={6} md={3} sx={{ padding: 3 }}>
       <LazyLoadImage width="100%" src={imagePath} alt={imagePath} />
       <Typography align="center" variant="h5">
-        {constellation}
       </Typography>
     </Grid>
   );
