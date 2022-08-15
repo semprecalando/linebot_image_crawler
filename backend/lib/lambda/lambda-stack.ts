@@ -1,11 +1,12 @@
 import { Role } from 'aws-cdk-lib/aws-iam';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
-import { Duration, Stack } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack } from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { FunctionUrlAuthType, HttpMethod, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
+// Todo: 開発が完了したらCORS関係の設定は消す
 const arrowOrigin = '*';
 
 export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new NodejsFunction(stack, 'image-crawler', {
@@ -42,5 +43,42 @@ export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceB
       events: [EventType.OBJECT_CREATED]
     })
   );
+  return lambda;
+}
+
+export const createGetThumbnailListLambdaAPI = (stack: Stack, imageBucket: Bucket, objectGetterRole: Role) => {
+  const lambda = new NodejsFunction(stack, 'thumbnail-lister', {
+    entry: 'lib/lambda/handlers/thumbnail-lister.ts',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    role: objectGetterRole,
+    environment: {
+      ALLOW_ORIGIN: arrowOrigin,
+      IMAGE_BUCKET_NAME: imageBucket.bucketName
+    },
+  });
+  const fucntionUrl = lambda.addFunctionUrl({
+    authType: FunctionUrlAuthType.NONE,
+    cors: {
+      allowedMethods: [HttpMethod.ALL],
+      allowedOrigins: [arrowOrigin],
+    },
+  });
+  new CfnOutput(stack, 'thumbnailListLambdaEndpoint', {
+    value: `${fucntionUrl.url}`,
+  })
+  return lambda;
+}
+
+export const createScanTableLambda = (stack: Stack, dynamoTable: Table, tag: string) => {
+  const lambda = new NodejsFunction(stack, `scan-${tag}-table`, {
+    entry: 'lib/lambda/handlers/table-scanner.ts',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    environment: {
+      ALLOW_ORIGIN: arrowOrigin,
+      TABLE_NAME: dynamoTable.tableName,
+    },
+  });
   return lambda;
 }
