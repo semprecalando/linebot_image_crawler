@@ -29,3 +29,17 @@ export const createFaceMatcherRole = (stack: Stack) => {
   );
   return faceMatcherRole;
 }
+
+export const createObjectGetterRole = (stack: Stack) => {
+  const faceMatcherRole = new Role(
+    stack,
+    "objectGetterRole",
+    {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ]
+    },
+  );
+  return faceMatcherRole;
+}

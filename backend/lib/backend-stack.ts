@@ -1,8 +1,8 @@
 import { createFaceDetectTable } from './dynamo/face-detect-table';
-import { createFaceMatcherRole, createImageCrowlerRole } from './iam/iam-stack';
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { createFaceMatcherRole, createImageCrowlerRole, createObjectGetterRole } from './iam/iam-stack';
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { createImageCrawlerLambda, createFaceMatcherLambda } from './lambda/lambda-stack';
+import { createImageCrawlerLambda, createFaceMatcherLambda, createGetThumbnailListLambda } from './lambda/lambda-stack';
 import { createWebhookAPI } from './api-gw/line-webhook-api';
 import { createImageBucket, createFaceBucket, setHostingImagePolicy } from './s3/bucket-stack';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -15,9 +15,12 @@ export class LineBotImageCrawlerStack extends Stack {
     // 各種コンポーネントを定義
     const imageCrowlerRole = createImageCrowlerRole(this);
     const faceMacherRole = createFaceMatcherRole(this);
+    const objectGetterRole = createObjectGetterRole(this);
 
-    const imageBucket = createImageBucket(this, [imageCrowlerRole], [faceMacherRole]);
+    const imageBucket = createImageBucket(this, [imageCrowlerRole], [faceMacherRole, objectGetterRole]);
     const imageCrawlerLambda = createImageCrawlerLambda(this, imageBucket, imageCrowlerRole);
+
+    const thumbnailListLambda = createGetThumbnailListLambda(this, imageBucket, objectGetterRole);
 
     const webhookEventAPI = createWebhookAPI(this, imageCrawlerLambda);
 

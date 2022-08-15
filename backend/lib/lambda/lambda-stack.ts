@@ -1,8 +1,8 @@
 import { Role } from 'aws-cdk-lib/aws-iam';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
-import { Duration, Stack } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack } from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { FunctionUrlAuthType, HttpMethod, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
@@ -42,5 +42,29 @@ export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceB
       events: [EventType.OBJECT_CREATED]
     })
   );
+  return lambda;
+}
+
+export const createGetThumbnailListLambda = (stack: Stack, imageBucket: Bucket, objectGetterRole: Role) => {
+  const lambda = new NodejsFunction(stack, 'thumbnail-lister', {
+    entry: 'lib/lambda/handlers/thumbnail-lister.ts',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    role: objectGetterRole,
+    environment: {
+      ALLOW_ORIGIN: arrowOrigin,
+      IMAGE_BUCKET_NAME: imageBucket.bucketName
+    },
+  });
+  const fucntionUrl = lambda.addFunctionUrl({
+    authType: FunctionUrlAuthType.NONE,
+    cors: {
+      allowedMethods: [HttpMethod.ALL],
+      allowedOrigins: [arrowOrigin],
+    },
+  });
+  new CfnOutput(stack, 'thumbnailListLambdaEndpoint', {
+    value: `${fucntionUrl.url}`,
+  })
   return lambda;
 }

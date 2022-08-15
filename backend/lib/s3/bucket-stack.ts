@@ -1,9 +1,9 @@
 import { Duration, RemovalPolicy, Stack } from "aws-cdk-lib";
-import { CloudFrontWebDistribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
+import { OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 import { CanonicalUserPrincipal, Effect, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { Bucket, HttpMethods } from "aws-cdk-lib/aws-s3";
 
-export const createImageBucket = (stack: Stack, allowPutRoles: Role[], allowGetRoles: Role[]) => {
+export const createImageBucket = (stack: Stack, allowPutRoles: Role[], allowReadRoles: Role[]) => {
   const bucket = new Bucket(stack, "line_crawel_image",{
     removalPolicy: RemovalPolicy.DESTROY,
     lifecycleRules: [
@@ -31,14 +31,9 @@ export const createImageBucket = (stack: Stack, allowPutRoles: Role[], allowGetR
       resources: [bucket.bucketArn + "/*"]
     })
   );
-  bucket.addToResourcePolicy(
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ["s3:GetObject"],
-      principals: allowGetRoles,
-      resources: [bucket.bucketArn + "/*"]
-    })
-  );
+  for (const role of allowReadRoles) {
+    bucket.grantRead(role);
+  }
   return bucket;
 };
 

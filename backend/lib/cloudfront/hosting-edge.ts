@@ -1,4 +1,4 @@
-import { Duration, Stack } from "aws-cdk-lib";
+import { CfnOutput, Duration, Stack } from "aws-cdk-lib";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { CloudFrontWebDistribution, OriginAccessIdentity, PriceClass } from "aws-cdk-lib/aws-cloudfront";
 
@@ -35,5 +35,9 @@ export const createHostingCloudFront = (stack: Stack, imageBbucket: Bucket, oai:
       },
     ]
   });
+  // コンソールに表示する出力設定
+  new CfnOutput(stack, 'CloudFrontDomen', {
+    value: `https://${cloudFront.distributionDomainName}`,
+  })
   return cloudFront;
 }
