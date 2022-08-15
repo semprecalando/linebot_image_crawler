@@ -45,7 +45,7 @@ export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceB
   return lambda;
 }
 
-export const createGetThumbnailListLambda = (stack: Stack, imageBucket: Bucket, objectGetterRole: Role) => {
+export const createGetThumbnailListLambdaAPI = (stack: Stack, imageBucket: Bucket, objectGetterRole: Role) => {
   const lambda = new NodejsFunction(stack, 'thumbnail-lister', {
     entry: 'lib/lambda/handlers/thumbnail-lister.ts',
     runtime: Runtime.NODEJS_16_X,
@@ -66,5 +66,18 @@ export const createGetThumbnailListLambda = (stack: Stack, imageBucket: Bucket, 
   new CfnOutput(stack, 'thumbnailListLambdaEndpoint', {
     value: `${fucntionUrl.url}`,
   })
+  return lambda;
+}
+
+export const createScanTableLambda = (stack: Stack, dynamoTable: Table, tag: string) => {
+  const lambda = new NodejsFunction(stack, `scan-${tag}-table`, {
+    entry: 'lib/lambda/handlers/table-scanner.ts',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    environment: {
+      ALLOW_ORIGIN: arrowOrigin,
+      TABLE_NAME: dynamoTable.tableName,
+    },
+  });
   return lambda;
 }

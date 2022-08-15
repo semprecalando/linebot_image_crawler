@@ -13,6 +13,17 @@ export const createWebhookAPI = (stack: Stack, lambda: Function) => {
   return api;
 }
 
+export const createAccessTableAPI = (stack: Stack, scanTableLambda: Function) => {
+  const api = new RestApi(stack, 'accessTableAPI', {
+    restApiName: 'Access dynamodb table API',
+  });
+  const content = api.root.addResource('thumbnail');
+  const scanTableIntegration = new LambdaIntegration(scanTableLambda);
+  content.addMethod('GET', scanTableIntegration);
+  addCorsOptions(content);
+  return api;
+}
+
 const addCorsOptions = (apiResource: IResource) => {
   apiResource.addMethod(
     'OPTIONS',
