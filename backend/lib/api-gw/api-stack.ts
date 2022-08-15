@@ -17,7 +17,7 @@ export const createAccessTableAPI = (stack: Stack, scanTableLambda: Function) =>
   const api = new RestApi(stack, 'accessTableAPI', {
     restApiName: 'Access dynamodb table API',
   });
-  const content = api.root.addResource('thumbnail');
+  const content = api.root.addResource('facedetect');
   const scanTableIntegration = new LambdaIntegration(scanTableLambda);
   content.addMethod('GET', scanTableIntegration);
   addCorsOptions(content);

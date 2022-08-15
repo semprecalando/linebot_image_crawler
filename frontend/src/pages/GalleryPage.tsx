@@ -2,8 +2,12 @@ import React, { FC, useEffect, useState } from 'react';
 import { CLOUDFRONT_URL } from '../lib/settings';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Typography, Grid } from '@mui/material';
-import { getImageThumbnailList } from '../lib/dynamoAPI';
+import { getImageThumbnailList, getFaceDetectResults } from '../lib/dynamoAPI';
 import FaceFilter from '../components/FaceFilter';
+import { FaceDetectResult } from '../lib/types';
+
+// Todo: カスタムフックとして切り出す
+// Todo: 作ったリストをチェックボックスの状態とセットでメモ化する
 
 const imageNameReplacer = (substring: string) =>
   `${CLOUDFRONT_URL}/thumbnails/${substring}`;
@@ -19,27 +23,41 @@ const createImageBox = (name: string) => {
   );
 };
 
-// 全部入りの表示リストと、現在の表示リストを用意
-// groom/brideにチェックを入れる→全部入りの表示リストをフィルタして新しい表示リストを作る
-// (appendix)作ったリストはチェックボックスの状態とセットでメモ化する
-// チェックボックスがどちらもONになっていない場合、全部入りの表示リストを現在の表示リストにする
-// 必要なstate→全部入りリスト/現在の表示リスト/groomとbrideのチェックボックスの状態
+const filterThumbnailList = (
+      baseThumbnailList: string[],
+      faceDetectResults: FaceDetectResult[],
+      isGroom: boolean,
+      isBride: boolean) => {
+  if (!isGroom && !isBride) return baseThumbnailList;
+  const newList: string[] = [];
+  for (const faceDetectResult of faceDetectResults) {
+    if (isGroom && faceDetectResult.groom) newList.push(faceDetectResult.imageName);
+    else if (isBride && faceDetectResult.bride) newList.push(faceDetectResult.imageName);
+  }
+  return newList;
+}
 
 const GalleryPage: FC = () => {
   const [imageThumbnailList, setImageThumbnailList] = useState<string[]>([]);
+  const [viewThumbnailList, setViewImageThumbnailList] = useState<string[]>([]);
+  const [faceDetectResults, setFaceDetectResults] = useState<FaceDetectResult[]>([]);
   const [isGroom, setIsGroom] = useState<boolean>(false);
   const [isBride, setIsBride] = useState<boolean>(false);
 
-  const getImages = async () => {
-    setImageThumbnailList(await getImageThumbnailList());
+  const getImageDataSet = async () => {
+    const thumbnailList = await getImageThumbnailList()
+    setImageThumbnailList(thumbnailList);
+    setViewImageThumbnailList(thumbnailList);
+    setFaceDetectResults(await getFaceDetectResults());
   };
   useEffect(() => {
-    console.log("effect");
-    getImages();
+    getImageDataSet();
   },[]);
 
   useEffect(() => {
-    console.log(`groom: ${isGroom}, bride: ${isBride}`);
+    setViewImageThumbnailList(
+      filterThumbnailList(imageThumbnailList, faceDetectResults, isGroom, isBride)
+    );
   },[isGroom, isBride]);
   return (
     <>
@@ -54,7 +72,7 @@ const GalleryPage: FC = () => {
       </Typography>
       <FaceFilter handleGroomChange={setIsGroom} handleBrideChange={setIsBride} />
       <Grid container alignItems="center" justifyContent="center">
-        {imageThumbnailList.map((thumbnail) => createImageBox(thumbnail))}
+        {viewThumbnailList.map((thumbnail) => createImageBox(thumbnail))}
       </Grid>
     </>
   )

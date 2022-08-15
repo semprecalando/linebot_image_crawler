@@ -6,6 +6,7 @@ import { FunctionUrlAuthType, HttpMethod, Runtime } from 'aws-cdk-lib/aws-lambda
 import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
+// Todo: 開発が完了したらCORS関係の設定は消す
 const arrowOrigin = '*';
 
 export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new NodejsFunction(stack, 'image-crawler', {

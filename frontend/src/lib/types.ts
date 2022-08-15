@@ -1,25 +1,11 @@
-export type BiblioCover = {
-  itemId: number;
-  title: string;
-  abst: string;
-  imageUrl: string;
-  author: string;
-  starryDate: string;
-  constellation?: string[];
-  place: string;
-};
-
-export type BiblioContent = {
-  itemId: number;
-  viewTitle: string;
-  imageUrl: string;
-  mainText: string;
-  constellation?: string[];
-  musics?: string[];
+export type FaceDetectRecord = {
+  imageName: {S: string},
+  groom?: {N: number},
+  bride?: {N: number}
 };
 
 export type FaceDetectResult = {
-  name: string,
-  groom?: boolean,
-  bride?: boolean
+  imageName: string,
+  groom?: number,
+  bride?: number
 };

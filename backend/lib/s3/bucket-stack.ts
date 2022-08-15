@@ -12,7 +12,7 @@ export const createImageBucket = (stack: Stack, allowPutRoles: Role[], allowRead
         abortIncompleteMultipartUploadAfter: Duration.days(6)
       }
     ],
-    // cors設定は開発時のみ利用する
+    // Todo: cors設定は開発時のみ利用する
     cors: [
       {
         allowedMethods: [
