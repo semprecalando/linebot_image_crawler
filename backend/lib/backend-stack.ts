@@ -46,5 +46,7 @@ export class LineBotImageCrawlerStack extends Stack {
     const oai = createHostingOAI(this);
     const hostingCloudFront = createHostingCloudFront(this, imageBucket, oai);
     setHostingImagePolicy(oai, imageBucket);
+
+    // Todo: ビルド用のスタックを用意して、マルチスタックビルドを行う
   }
 }

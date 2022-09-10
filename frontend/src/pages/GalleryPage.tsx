@@ -8,6 +8,7 @@ import { FaceDetectResult } from '../lib/types';
 
 // Todo: カスタムフックとして切り出す
 // Todo: 作ったリストをチェックボックスの状態とセットでメモ化する
+// Todo: サムネイルを選択したらオリジナル画像を表示する
 
 const imageNameReplacer = (substring: string) =>
   `${CLOUDFRONT_URL}/thumbnails/${substring}`;
