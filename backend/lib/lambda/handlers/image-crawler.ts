@@ -1,5 +1,5 @@
 import { Upload } from "@aws-sdk/lib-storage";
-import { S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import * as line from "@line/bot-sdk";
 import { TextMessage, WebhookRequestBody } from "@line/bot-sdk";
 import { createThumbnailFromReadable, getNowJSTDate, Response } from "./utils";
@@ -61,8 +61,8 @@ const processWebhookEvents = async (events: line.WebhookEvent[]) => {
     isRecieveOther: false,
     isRecieveImageError: false
   };
-
   for (const event of events) {
+    console.log(event)
     // recieveStatusでメッセージタイプの重複を管理し、各ステータスごとにメッセージを返却するのは一度だけとする
     // Todo: dynamoとimageSet.idを利用した連投画像ステータス管理（現状は連投画像が分割して送信された場合、分割された数だけメッセージを返してしまう）
     if (event.type == "message" && event.message.type == "text" && !recieveStatus.isRecieveText) {
@@ -79,11 +79,16 @@ const processWebhookEvents = async (events: line.WebhookEvent[]) => {
         const thubnailContent = await lineClient.getMessageContent(event.message.id);
         const thumbnail = await createThumbnailFromReadable(thubnailContent, 200);
         await putImage(thumbnail, `${THUMBNAIL_DIR}/${imageFileName}`);
-        if (!recieveStatus.isRecieveImage) await replyText(event, "画像を受け取りました！");
+        // 複数画像がある場合、最後のIDのもの（index=totalのもの）にのみ反応する
+        const imageSet = event.message.imageSet
+        if (!recieveStatus.isRecieveImage && imageSet == undefined) await replyText(event, "画像を受け取りました！");
+        else if (imageSet && imageSet.index == imageSet.total) await replyText(event, "画像を受け取りました！");
         recieveStatus.isRecieveImage = true;
       } catch (error) {
         console.log(error);
-        if (!recieveStatus.isRecieveImageError) await replyText(event, "画像の一部を受け取れませんでした…もう一度送信してみてください");
+        if (!recieveStatus.isRecieveImageError) {
+          await replyText(event, "画像の一部を受け取れませんでした…もう一度送信してみてください");
+        }
         recieveStatus.isRecieveImageError = true;
       }
     }
