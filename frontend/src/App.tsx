@@ -2,12 +2,12 @@ import React from 'react';
 import { FC } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import GalleryPage from './pages/GalleryPage';
+import CorkboardPage from './pages/CorkboardPage';
 
 const App: FC = () => {
   return (
     <div className="App">
-      <GalleryPage />
+      <CorkboardPage />
     </div>
   );
 }

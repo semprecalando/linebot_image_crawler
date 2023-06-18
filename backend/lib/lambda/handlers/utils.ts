@@ -23,6 +23,7 @@ export const stream2buffer = async (stream: Stream): Promise<Buffer> => {
 }
 
 export const createThumbnailFromReadable = async(readable: Readable, heightPixel: number) => {
+  // Todo: 縦長なら縦200に、横長なら横200に
   const result = await sharp(await stream2buffer(readable)).resize( {height: heightPixel} ).toBuffer()
   return result;
 }
