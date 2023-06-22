@@ -36,6 +36,8 @@
       "aws-cn"
     ],
     "lineAccessToken": "",
-    "lineAccessSecret": ""
+    "lineAccessSecret": "",
+    "region": "",
+    "chatChannel": ""
   }
 }

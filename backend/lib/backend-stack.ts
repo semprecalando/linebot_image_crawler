@@ -7,6 +7,7 @@ import { createAccessTableAPI, createWebhookAPI } from './api-gw/api-stack'
 import { createImageBucket, createFaceBucket, setHostingImagePolicy } from './s3/bucket-stack';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { createHostingCloudFront, createHostingOAI } from './cloudfront/hosting-edge';
+import { createGraphqlAPI } from './Appsync/image-list-api';
 
 export class LineBotImageCrawlerStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -17,12 +18,15 @@ export class LineBotImageCrawlerStack extends Stack {
     const faceMacherRole = createFaceMatcherRole(this);
     const objectGetterRole = createObjectGetterRole(this);
 
+    // サブスクリプション用GrqphQL API
+    const graphQLAPI = createGraphqlAPI(this);
+
     // S3バケットを定義
     const imageBucket = createImageBucket(this, [imageCrowlerRole], [faceMacherRole, objectGetterRole]);
-    const imageCrawlerLambda = createImageCrawlerLambda(this, imageBucket, imageCrowlerRole);
+    const faceSourceBucket = createFaceBucket(this, [faceMacherRole]);
 
     // Lambda群を定義
-    const faceSourceBucket = createFaceBucket(this, [faceMacherRole]);
+    const imageCrawlerLambda = createImageCrawlerLambda(this, imageBucket, imageCrowlerRole, graphQLAPI);
     const faceDetectTable = createFaceDetectTable(this);
     const scanFaceDetectTableLambda = createScanTableLambda(this, faceDetectTable, 'faceDetect');
     const faceMatcherLambda = createFaceMatcherLambda(this, imageBucket, faceSourceBucket, faceDetectTable, faceMacherRole);

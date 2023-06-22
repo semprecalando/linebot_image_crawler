@@ -5,11 +5,12 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { FunctionUrlAuthType, HttpMethod, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { GraphqlApi } from 'aws-cdk-lib/aws-appsync';
 
 // Todo: 開発が完了したらCORS関係の設定は消す
 const arrowOrigin = '*';
 
-export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new NodejsFunction(stack, 'image-crawler', {
+export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role, graphQLAPI: GraphqlApi) => new NodejsFunction(stack, 'image-crawler', {
   entry: 'lib/lambda/handlers/image-crawler.ts',
   runtime: Runtime.NODEJS_16_X,
   timeout: Duration.seconds(10),
@@ -21,7 +22,11 @@ export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imag
     ALLOW_ORIGIN: arrowOrigin,
     LINE_ACCESS_TOKEN: stack.node.tryGetContext('lineAccessToken'),
     LINE_ACCESS_SECRET: stack.node.tryGetContext('lineAccessSecret'),
-    IMAGE_BUCKET_NAME: imageBucket.bucketName
+    REGION: stack.node.tryGetContext('region'),
+    IMAGE_BUCKET_NAME: imageBucket.bucketName,
+    CHAT_URL: graphQLAPI.graphqlUrl,
+    CHAT_API_KEY: graphQLAPI.apiKey || "",
+    CHAT_CHANNEL: stack.node.tryGetContext('chatChannel')
   },
 });
 
