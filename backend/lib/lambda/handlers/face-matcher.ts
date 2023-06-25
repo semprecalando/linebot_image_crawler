@@ -1,6 +1,7 @@
 // 特定ユーザの顔が写っているかをrekognitionでスキャンし、結果をdynamoDBに格納する
 import { CompareFacesCommand, RekognitionClient } from "@aws-sdk/client-rekognition";
 import { DynamoDBClient, PutItemCommand, PutItemInput } from "@aws-sdk/client-dynamodb";
+import { FaceRecord } from "./utils";
 
 const FACE_BUCKET_NAME = process.env.FACE_BUCKET_NAME || "";
 const TABLE_NAME = process.env.TABLE_NAME || "";
@@ -11,15 +12,10 @@ const rekognitionClient = new RekognitionClient({
 });
 const dynamoDBClient = new DynamoDBClient({
   region: REGION,
-})
-
-type FaceRecord = {
-  imageName: string ,
-  bride?: number,
-  groom?: number
-}
+});
 
 const writeRecord = async (record: FaceRecord) => {
+  console.log("writeRecord");
   const input: PutItemInput = {
     TableName: TABLE_NAME,
     Item: {
@@ -34,6 +30,9 @@ const writeRecord = async (record: FaceRecord) => {
 }
 
 const compareFaces = async (sourceName: string, targetBucketName: string, targetKey: string) => {
+  console.log("compareFaces");
+  console.log(sourceName);
+  console.log(targetKey);
   const result = await rekognitionClient.send(
     new CompareFacesCommand({
       SourceImage: {"S3Object": {"Bucket": `${FACE_BUCKET_NAME}`, "Name": `${sourceName}`}},
@@ -62,6 +61,7 @@ export const handler = async (event: any = {}): Promise<any> => {
     // キーの最後を取得
     imageName: key.split("/").slice(-1)[0]
   }
+  /* Todo: 顔認識が動かない原因調査（コルクボードには不要なので一旦コメントアウト）
   const brideCheckResult = await compareFaces("brides/bride.jpg", bucketName, key);
   if (brideCheckResult.FaceMatches?.length) {
     record.bride = 1;
@@ -71,9 +71,11 @@ export const handler = async (event: any = {}): Promise<any> => {
     record.groom = 1;
   }
 
-  if (record.bride !== undefined || record.groom !== undefined) {
-    await writeRecord(record);
-  }
+  // if (record.bride !== undefined || record.groom !== undefined) {
+  //   await writeRecord(record);
+  // };
+  */
+  await writeRecord(record);
 
   res.body = "finish";
   return await res;

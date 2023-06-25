@@ -2,7 +2,11 @@ import { createFaceDetectTable } from './dynamo/face-detect-table';
 import { createFaceMatcherRole, createImageCrowlerRole, createObjectGetterRole } from './iam/iam-stack';
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { createImageCrawlerLambda, createFaceMatcherLambda, createGetThumbnailListLambdaAPI, createScanTableLambda } from './lambda/lambda-stack';
+import { createImageCrawlerLambda,
+         createFaceMatcherLambda,
+         createGetThumbnailListLambdaAPI,
+         createScanTableLambda,
+         createDynamoStreamNotifierLambda } from './lambda/lambda-stack';
 import { createAccessTableAPI, createWebhookAPI } from './api-gw/api-stack'
 import { createImageBucket, createFaceBucket, setHostingImagePolicy } from './s3/bucket-stack';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
@@ -25,11 +29,14 @@ export class LineBotImageCrawlerStack extends Stack {
     const imageBucket = createImageBucket(this, [imageCrowlerRole], [faceMacherRole, objectGetterRole]);
     const faceSourceBucket = createFaceBucket(this, [faceMacherRole]);
 
-    // Lambda群を定義
-    const imageCrawlerLambda = createImageCrawlerLambda(this, imageBucket, imageCrowlerRole, graphQLAPI);
+    // dynamoDBを定義
     const faceDetectTable = createFaceDetectTable(this);
+
+    // Lambda群を定義
+    const imageCrawlerLambda = createImageCrawlerLambda(this, imageBucket, imageCrowlerRole);
     const scanFaceDetectTableLambda = createScanTableLambda(this, faceDetectTable, 'faceDetect');
     const faceMatcherLambda = createFaceMatcherLambda(this, imageBucket, faceSourceBucket, faceDetectTable, faceMacherRole);
+    const faceDetectTableNorifier = createDynamoStreamNotifierLambda(this, faceDetectTable, graphQLAPI, 'faceDetect');
 
     // dynamoDBにアクセスする設定
     faceDetectTable.grantReadWriteData(faceMatcherLambda);

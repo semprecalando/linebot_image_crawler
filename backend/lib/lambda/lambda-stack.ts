@@ -2,15 +2,15 @@ import { Role } from 'aws-cdk-lib/aws-iam';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
 import { CfnOutput, Duration, Stack } from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { FunctionUrlAuthType, HttpMethod, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { FunctionUrlAuthType, HttpMethod, Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda';
+import { DynamoEventSource, S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { GraphqlApi } from 'aws-cdk-lib/aws-appsync';
 
 // Todo: 開発が完了したらCORS関係の設定は消す
 const arrowOrigin = '*';
 
-export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role, graphQLAPI: GraphqlApi) => new NodejsFunction(stack, 'image-crawler', {
+export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imageCrowlerRole: Role) => new NodejsFunction(stack, 'image-crawler', {
   entry: 'lib/lambda/handlers/image-crawler.ts',
   runtime: Runtime.NODEJS_16_X,
   timeout: Duration.seconds(10),
@@ -23,10 +23,7 @@ export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imag
     LINE_ACCESS_TOKEN: stack.node.tryGetContext('lineAccessToken'),
     LINE_ACCESS_SECRET: stack.node.tryGetContext('lineAccessSecret'),
     REGION: stack.node.tryGetContext('region'),
-    IMAGE_BUCKET_NAME: imageBucket.bucketName,
-    CHAT_URL: graphQLAPI.graphqlUrl,
-    CHAT_API_KEY: graphQLAPI.apiKey || "",
-    CHAT_CHANNEL: stack.node.tryGetContext('chatChannel')
+    IMAGE_BUCKET_NAME: imageBucket.bucketName
   },
 });
 
@@ -38,6 +35,7 @@ export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceB
     role: faceMatcherRole,
     environment: {
       ALLOW_ORIGIN: arrowOrigin,
+      REGION: stack.node.tryGetContext('region'),
       TABLE_NAME: dynamoTable.tableName,
       FACE_BUCKET_NAME: faceBucket.bucketName
     },
@@ -49,7 +47,7 @@ export const createFaceMatcherLambda = (stack: Stack, imageBucket: Bucket, faceB
     })
   );
   return lambda;
-}
+};
 
 export const createGetThumbnailListLambdaAPI = (stack: Stack, imageBucket: Bucket, objectGetterRole: Role) => {
   const lambda = new NodejsFunction(stack, 'thumbnail-lister', {
@@ -73,7 +71,7 @@ export const createGetThumbnailListLambdaAPI = (stack: Stack, imageBucket: Bucke
     value: `${fucntionUrl.url}`,
   })
   return lambda;
-}
+};
 
 export const createScanTableLambda = (stack: Stack, dynamoTable: Table, tag: string) => {
   const lambda = new NodejsFunction(stack, `scan-${tag}-table`, {
@@ -86,4 +84,26 @@ export const createScanTableLambda = (stack: Stack, dynamoTable: Table, tag: str
     },
   });
   return lambda;
-}
+};
+
+export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Table,  graphQLAPI: GraphqlApi, tag: string) => {
+  const lambda = new NodejsFunction(stack, `notify-${tag}-dynamo-stream`, {
+    entry: 'lib/lambda/handlers/dynamo-stream-notifier.ts',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    environment: {
+      ALLOW_ORIGIN: arrowOrigin,
+      REGION: stack.node.tryGetContext('region'),
+      TABLE_NAME: dynamoTable.tableName,
+      CHAT_URL: graphQLAPI.graphqlUrl,
+      CHAT_API_KEY: graphQLAPI.apiKey || "",
+      CHAT_CHANNEL: stack.node.tryGetContext('chatChannel')
+    },
+  });
+  lambda.addEventSource(
+    new DynamoEventSource(dynamoTable, {
+      startingPosition: StartingPosition.LATEST,
+    })
+  );
+  return lambda;
+};

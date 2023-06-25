@@ -1,5 +1,5 @@
 import { RemovalPolicy, Stack } from 'aws-cdk-lib';
-import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { AttributeType, StreamViewType, Table } from 'aws-cdk-lib/aws-dynamodb';
 
 export const createFaceDetectTable = (stack: Stack) => {
   const table = new Table(
@@ -11,7 +11,8 @@ export const createFaceDetectTable = (stack: Stack) => {
         type: AttributeType.STRING
       },
       tableName: 'faceDetectTable',
-      removalPolicy: RemovalPolicy.DESTROY
+      removalPolicy: RemovalPolicy.DESTROY,
+      stream: StreamViewType.NEW_IMAGE
     },
   );
   return table;
