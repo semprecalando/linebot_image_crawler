@@ -27,6 +27,7 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@aws-cdk/aws-apigatewayv2-alpha": "^2.84.0-alpha.0",
     "@line/bot-sdk": "^7.5.0",
     "@types/sharp": "^0.30.4",
     "aws-appsync": "^4.1.9",
