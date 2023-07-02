@@ -86,7 +86,7 @@ export const createScanTableLambda = (stack: Stack, dynamoTable: Table, tag: str
   return lambda;
 };
 
-export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Table,  graphQLAPI: GraphqlApi, tag: string) => {
+export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Table, tag: string) => {
   const lambda = new NodejsFunction(stack, `notify-${tag}-dynamo-stream`, {
     entry: 'lib/lambda/handlers/dynamo-stream-notifier.ts',
     runtime: Runtime.NODEJS_16_X,
@@ -95,8 +95,6 @@ export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Tabl
       ALLOW_ORIGIN: arrowOrigin,
       REGION: stack.node.tryGetContext('region'),
       TABLE_NAME: dynamoTable.tableName,
-      CHAT_URL: graphQLAPI.graphqlUrl,
-      CHAT_API_KEY: graphQLAPI.apiKey || "",
       CHAT_CHANNEL: stack.node.tryGetContext('chatChannel')
     },
   });
