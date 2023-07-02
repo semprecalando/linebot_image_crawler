@@ -9,3 +9,8 @@ export type FaceDetectResult = {
   groom?: number,
   bride?: number
 };
+
+export type ImageConfig = {
+  imagePosition?: { x: number; y: number };
+  rotation?: number;
+};

@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "^2.84.0-alpha.0",
+    "@aws-sdk/client-lambda": "^3.363.0",
     "@line/bot-sdk": "^7.5.0",
     "@types/sharp": "^0.30.4",
     "aws-appsync": "^4.1.9",
@@ -36,6 +37,8 @@
     "graphql-tag": "^2.12.6",
     "isomorphic-fetch": "^3.0.0",
     "sharp": "^0.30.7",
+    "socket.io": "^4.7.1",
+    "socket.io-client": "^4.7.1",
     "source-map-support": "^0.5.21"
   }
 }
