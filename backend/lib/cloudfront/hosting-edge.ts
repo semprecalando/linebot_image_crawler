@@ -8,7 +8,7 @@ export const createHostingOAI = (stack: Stack) => {
   return oai;
 }
 
-export const createHostingCloudFront = (stack: Stack, imageBbucket: Bucket, oai: OriginAccessIdentity) => {
+export const createHostingCloudFront = (stack: Stack, imageBbucket: Bucket, hostingBucket: Bucket, oai: OriginAccessIdentity) => {
   const cloudFront = new CloudFrontWebDistribution(stack, "hosting-cloudfront", {
     viewerCertificate: {
       aliases: [],
@@ -20,7 +20,7 @@ export const createHostingCloudFront = (stack: Stack, imageBbucket: Bucket, oai:
     originConfigs: [
       {
         s3OriginSource: {
-          s3BucketSource: imageBbucket,
+          s3BucketSource: hostingBucket,
           originAccessIdentity: oai,
         },
         behaviors: [
@@ -29,10 +29,25 @@ export const createHostingCloudFront = (stack: Stack, imageBbucket: Bucket, oai:
             minTtl: Duration.seconds(0),
             maxTtl: Duration.days(0),
             defaultTtl: Duration.days(0),
-            pathPattern: 'thumbnails/*',
+            pathPattern: '*',
           },
         ],
       },
+      {
+        s3OriginSource: {
+          s3BucketSource: imageBbucket,
+          originAccessIdentity: oai,
+        },
+        behaviors: [
+          {
+            isDefaultBehavior: false,
+            minTtl: Duration.seconds(0),
+            maxTtl: Duration.days(0),
+            defaultTtl: Duration.days(0),
+            pathPattern: 'thumbnails/*',
+          },
+        ],
+      }
     ]
   });
   // コンソールに表示する出力設定

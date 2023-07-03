@@ -16,4 +16,4 @@ export const createFaceDetectTable = (stack: Stack) => {
     },
   );
   return table;
-}
+};

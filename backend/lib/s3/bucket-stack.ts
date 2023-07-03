@@ -78,3 +78,26 @@ export const setHostingSPAPolicy = (oai: OriginAccessIdentity, bucket: Bucket) =
 
   return bucket;
 }
+
+export const createHostingBucket = (stack: Stack) => {
+  const bucket = new Bucket(stack, "web-hosting",{
+    removalPolicy: RemovalPolicy.DESTROY,
+    lifecycleRules: [
+      {
+        id: 'delete-multipart-garbage',
+        abortIncompleteMultipartUploadAfter: Duration.days(6)
+      }
+    ],
+    // Todo: cors設定は開発時のみ利用する
+    cors: [
+      {
+        allowedMethods: [
+          HttpMethods.GET,
+        ],
+        allowedOrigins: ['http://localhost:3000'],
+        allowedHeaders: ['*'],
+      },
+    ],
+  });
+  return bucket;
+};

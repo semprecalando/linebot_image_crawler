@@ -8,7 +8,7 @@ import { createImageCrawlerLambda,
          createScanTableLambda,
          createDynamoStreamNotifierLambda } from './lambda/lambda-stack';
 import { createAccessTableAPI, createWebhookAPI } from './api-gw/api-stack'
-import { createImageBucket, createFaceBucket, setHostingImagePolicy } from './s3/bucket-stack';
+import { createImageBucket, createFaceBucket, setHostingImagePolicy, createHostingBucket, setHostingSPAPolicy } from './s3/bucket-stack';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { createHostingCloudFront, createHostingOAI } from './cloudfront/hosting-edge';
 
@@ -24,6 +24,7 @@ export class LineBotImageCrawlerStack extends Stack {
     // S3バケットを定義
     const imageBucket = createImageBucket(this, [imageCrowlerRole], [faceMacherRole, objectGetterRole]);
     const faceSourceBucket = createFaceBucket(this, [faceMacherRole]);
+    const hostingBucket = createHostingBucket(this);
 
     // dynamoDBを定義
     const faceDetectTable = createFaceDetectTable(this);
@@ -51,8 +52,9 @@ export class LineBotImageCrawlerStack extends Stack {
 
     // 静的コンテンツ配信用の設定
     const oai = createHostingOAI(this);
-    const hostingCloudFront = createHostingCloudFront(this, imageBucket, oai);
+    const hostingCloudFront = createHostingCloudFront(this, imageBucket, hostingBucket, oai);
     setHostingImagePolicy(oai, imageBucket);
+    setHostingSPAPolicy(oai, hostingBucket);
 
     // Todo: ビルド用のスタックを用意して、マルチスタックビルドを行う
   }
