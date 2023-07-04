@@ -17,3 +17,19 @@ export const createFaceDetectTable = (stack: Stack) => {
   );
   return table;
 };
+
+export const createWsConnectionTable = (stack: Stack) => {
+  const table = new Table(
+    stack,
+    "wsConnectionTable",
+    {
+      partitionKey: {
+        name: "connectionId",
+        type: AttributeType.STRING
+      },
+      tableName: 'wsConnectionTable',
+      removalPolicy: RemovalPolicy.DESTROY
+    },
+  );
+  return table;
+};

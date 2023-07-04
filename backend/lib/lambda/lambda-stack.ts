@@ -5,7 +5,6 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { FunctionUrlAuthType, HttpMethod, Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource, S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { GraphqlApi } from 'aws-cdk-lib/aws-appsync';
 
 // Todo: 開発が完了したらCORS関係の設定は消す
 const arrowOrigin = '*';
@@ -103,5 +102,50 @@ export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Tabl
       startingPosition: StartingPosition.LATEST,
     })
   );
+  return lambda;
+};
+
+export const createWsConnectLambda = (stack: Stack, dynamoTable: Table) => {
+  const lambda = new NodejsFunction(stack, `ws-connect`, {
+    entry: 'lib/lambda/handlers/ws-connect.js',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    environment: {
+      table: dynamoTable.tableName,
+    },
+  });
+  return lambda;
+};
+
+export const createWsDisconnectLambda = (stack: Stack, dynamoTable: Table) => {
+  const lambda = new NodejsFunction(stack, `ws-disconnect`, {
+    entry: 'lib/lambda/handlers/ws-disconnect.js',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    environment: {
+      table: dynamoTable.tableName,
+    },
+  });
+  return lambda;
+};
+
+export const createWsMessageLambda = (stack: Stack, dynamoTable: Table) => {
+  const lambda = new NodejsFunction(stack, `ws-message`, {
+    entry: 'lib/lambda/handlers/send-message.js',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10),
+    environment: {
+      table: dynamoTable.tableName,
+    },
+  });
+  return lambda;
+};
+
+export const createWsDefaultLambda = (stack: Stack) => {
+  const lambda = new NodejsFunction(stack, `ws-default`, {
+    entry: 'lib/lambda/handlers/ws-default.js',
+    runtime: Runtime.NODEJS_16_X,
+    timeout: Duration.seconds(10)
+  });
   return lambda;
 };
