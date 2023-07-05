@@ -5,6 +5,7 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { FunctionUrlAuthType, HttpMethod, Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource, S3EventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { WebSocketApi } from '@aws-cdk/aws-apigatewayv2-alpha';
 
 // Todo: 開発が完了したらCORS関係の設定は消す
 const arrowOrigin = '*';
@@ -22,7 +23,8 @@ export const createImageCrawlerLambda = (stack: Stack, imageBucket: Bucket, imag
     LINE_ACCESS_TOKEN: stack.node.tryGetContext('lineAccessToken'),
     LINE_ACCESS_SECRET: stack.node.tryGetContext('lineAccessSecret'),
     REGION: stack.node.tryGetContext('region'),
-    IMAGE_BUCKET_NAME: imageBucket.bucketName
+    IMAGE_BUCKET_NAME: imageBucket.bucketName,
+    THUMBNAIL_SIZE: '200'
   },
 });
 
@@ -85,16 +87,18 @@ export const createScanTableLambda = (stack: Stack, dynamoTable: Table, tag: str
   return lambda;
 };
 
-export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Table, tag: string) => {
+export const createDynamoStreamNotifierLambda = (stack: Stack, dynamoTable: Table, notifyRole: Role, wsLambda: NodejsFunction, wsAPI: WebSocketApi, tag: string) => {
   const lambda = new NodejsFunction(stack, `notify-${tag}-dynamo-stream`, {
     entry: 'lib/lambda/handlers/dynamo-stream-notifier.ts',
     runtime: Runtime.NODEJS_16_X,
     timeout: Duration.seconds(10),
+    role: notifyRole,
     environment: {
       ALLOW_ORIGIN: arrowOrigin,
       REGION: stack.node.tryGetContext('region'),
       TABLE_NAME: dynamoTable.tableName,
-      CHAT_CHANNEL: stack.node.tryGetContext('chatChannel')
+      WEBSOCKET_URL: wsAPI.apiEndpoint,
+      WS_LAMBDA_NAME: wsLambda.functionName
     },
   });
   lambda.addEventSource(

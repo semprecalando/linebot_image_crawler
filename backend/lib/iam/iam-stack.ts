@@ -43,3 +43,18 @@ export const createObjectGetterRole = (stack: Stack) => {
   );
   return faceMatcherRole;
 }
+
+export const createWsMessagePushRole = (stack: Stack) => {
+  const faceMatcherRole = new Role(
+    stack,
+    "wsMessagePushRole",
+    {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaRole'),
+        ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ]
+    },
+  );
+  return faceMatcherRole;
+}

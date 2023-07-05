@@ -1,5 +1,5 @@
 import { createFaceDetectTable, createWsConnectionTable } from './dynamo/face-detect-table';
-import { createFaceMatcherRole, createImageCrowlerRole, createObjectGetterRole } from './iam/iam-stack';
+import { createFaceMatcherRole, createImageCrowlerRole, createObjectGetterRole, createWsMessagePushRole } from './iam/iam-stack';
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { createImageCrawlerLambda,
@@ -23,6 +23,7 @@ export class LineBotImageCrawlerStack extends Stack {
     const imageCrowlerRole = createImageCrowlerRole(this);
     const faceMacherRole = createFaceMatcherRole(this);
     const objectGetterRole = createObjectGetterRole(this);
+    const wsMessagePushRole = createWsMessagePushRole(this);
 
     // S3バケットを定義
     const imageBucket = createImageBucket(this, [imageCrowlerRole], [faceMacherRole, objectGetterRole]);
@@ -37,7 +38,6 @@ export class LineBotImageCrawlerStack extends Stack {
     const imageCrawlerLambda = createImageCrawlerLambda(this, imageBucket, imageCrowlerRole);
     const scanFaceDetectTableLambda = createScanTableLambda(this, faceDetectTable, 'faceDetect');
     const faceMatcherLambda = createFaceMatcherLambda(this, imageBucket, faceSourceBucket, faceDetectTable, faceMacherRole);
-    const faceDetectTableNorifier = createDynamoStreamNotifierLambda(this, faceDetectTable, 'faceDetect');
     const wsConnectLambda = createWsConnectLambda(this, wsConnectionTable);
     const wsDisconnectLambda = createWsDisconnectLambda(this, wsConnectionTable);
     const wsMessageLambda = createWsMessageLambda(this, wsConnectionTable);
@@ -54,6 +54,9 @@ export class LineBotImageCrawlerStack extends Stack {
     const accessFaceDetectTableAPI = createAccessTableAPI(this, scanFaceDetectTableLambda);
     const thumbnailListLambdaAPI = createGetThumbnailListLambdaAPI(this, imageBucket, objectGetterRole);
     const webSocketAPI = createWebsocketAPI(this, wsConnectLambda, wsDisconnectLambda, wsMessageLambda, wsMessageLambda);
+
+    // Websocketのmessage apiを直接呼び出すLambda(Dybamo streamをイベントトリガとする)
+    const faceDetectTableNorifier = createDynamoStreamNotifierLambda(this, faceDetectTable, wsMessagePushRole, wsMessageLambda, webSocketAPI, 'faceDetect');
 
     // 画像用S3バケットに事前投入するファイルを設定(ディレクトリごと投入する)
     const faceImageDeployment = new BucketDeployment(this, 'deployFaceImages', {

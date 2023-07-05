@@ -2,7 +2,7 @@ import { FaceRecord, Response } from './utils';
 import { LambdaClient, InvokeCommand, LogType } from "@aws-sdk/client-lambda";
 
 const REGION = process.env.REGION || "ap-northeast-1";
-const WEBSOCKET_DOMAIN = process.env.WEBSOCKET_DOMAIN || "";
+const WEBSOCKET_URL = process.env.WEBSOCKET_URL || "";
 const WS_LAMBDA_NAME = process.env.WS_LAMBDA_NAME || "";
 
 const lambdaClient = new LambdaClient({region: REGION});
@@ -16,9 +16,9 @@ const createLambdaInput = (record: FaceRecord) => {
         "eventType": "MESSAGE",
         "messageDirection": "IN",
         "stage": "production",
-        "domainName": WEBSOCKET_DOMAIN,
+        "domainName": WEBSOCKET_URL.split("wss://")[1],
         "connectionId": "dynamoDB-stream-notifier",
-        "apiId": WEBSOCKET_DOMAIN.split(".")[0]
+        "apiId": WEBSOCKET_URL.split("wss://")[1].split(".")[0]
     },
     "body": JSON.stringify({"action": "sendmessage", "message": JSON.stringify(record)}),
     "isBase64Encoded": false

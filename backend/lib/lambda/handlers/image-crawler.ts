@@ -11,6 +11,7 @@ const REGION = process.env.REGION || "ap-northeast-1";
 const IMAGE_BUCKET_NAME = process.env.IMAGE_BUCKET_NAME || "";
 const IMAGE_DIR = process.env.IMAGE_DIR || "images";
 const THUMBNAIL_DIR = process.env.IMAGE_DIR || "thumbnails";
+const THUMBNAIL_SIZE = Number(process.env.THUMBNAIL_SIZE) || 200;
 
 const CONFIG = {
   channelAccessToken:LINE_ACCESS_TOKEN,
@@ -78,7 +79,7 @@ const processWebhookEvents = async (events: line.WebhookEvent[]) => {
         await putImage(putContent, `${IMAGE_DIR}/${imageFileName}`);
         // Todo: サムネイルでもおなじcontentを使い回す(できるなら)
         const thubnailContent = await lineClient.getMessageContent(event.message.id);
-        const thumbnail = await createThumbnailFromReadable(thubnailContent, 200);
+        const thumbnail = await createThumbnailFromReadable(thubnailContent, THUMBNAIL_SIZE);
         await putImage(thumbnail, `${THUMBNAIL_DIR}/${imageFileName}`);
 
         // 複数画像がある場合、最後のIDのもの（index=totalのもの）にのみ反応する
