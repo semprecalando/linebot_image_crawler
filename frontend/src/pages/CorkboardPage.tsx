@@ -6,6 +6,7 @@ import { useWindowSize } from '../lib/useWindowsize';
 import { BackGroundImage } from '../components/BackgroundImage';
 import ReconnectingWebSocket from 'reconnecting-websocket'
 import { ImageConfig } from '../lib/types';
+import { getRandomPosition } from '../lib/utils';
 
 interface ImageConfigDict {
   [imageName: string]: ImageConfig
@@ -13,6 +14,7 @@ interface ImageConfigDict {
 
 const imageNameReplacer = (substring: string) =>
   `${CLOUDFRONT_URL}/thumbnails/${substring}`;
+
 const createCardBord = (imageName: string, windowWidth: number, windowHeight: number, imageConfigDict: ImageConfigDict) => {
   const imagePath = imageNameReplacer(imageName);
   const rotationAbsoluteDeg = 10;
@@ -24,16 +26,9 @@ const createCardBord = (imageName: string, windowWidth: number, windowHeight: nu
   );
 };
 
-const getRandomPosition = (maxX: number, maxY: number) => {
-  // 2つの値の間の乱数を得るのは Math.random() * (max - min) + min;
-  const x = Math.random() * (maxX * 0.8 - maxX * 0.01) + maxX * 0.05;
-  const y = Math.random() * (maxY * 0.8 - maxY * 0.1) + maxY * 0.1;
-  return { x, y };
-};
-
 const CorkboardPage: FC = () => {
   const [viewThumbnailList, setViewImageThumbnailList] = useState<string[]>([]);
-  const [imageConfigDict, setimageConfigDict] = useState<ImageConfigDict>({});
+  const [imageConfigDict, setImageConfigDict] = useState<ImageConfigDict>({});
   const [width, height] = useWindowSize();
 
   const getImageDataSet = async () => {
@@ -45,12 +40,12 @@ const CorkboardPage: FC = () => {
     // Todo: websocketのcustom hook切り出し
     const websocket = new ReconnectingWebSocket(WS_URL);
     // 接続時の処理
-    websocket.addEventListener("open", (event) => {
-      console.log("connected");
+    websocket.addEventListener('open', (event) => {
+      console.log('connected');
     });
     // 切断時の処理
-    websocket.addEventListener("close", (event) => {
-      console.log("closed");
+    websocket.addEventListener('close', (event) => {
+      console.log('closed');
     });
     const onMessage = (event: MessageEvent<string>) => {
       console.log(event.data);
@@ -87,7 +82,7 @@ const CorkboardPage: FC = () => {
       }
       return;
     });
-    setimageConfigDict(newImageConfigDict);
+    setImageConfigDict(newImageConfigDict);
   },[viewThumbnailList]);
 
   return (
