@@ -6,7 +6,7 @@ import { useWindowSize } from '../lib/useWindowsize';
 import { BackGroundImage } from '../components/BackgroundImage';
 import ReconnectingWebSocket from 'reconnecting-websocket'
 import { ImageConfig } from '../lib/types';
-import { getRandomPosition } from '../lib/utils';
+import { getWindowRandomPosition } from '../lib/utils';
 
 interface ImageConfigDict {
   [imageName: string]: ImageConfig
@@ -20,7 +20,7 @@ const createCardBord = (imageName: string, windowWidth: number, windowHeight: nu
   const rotationAbsoluteDeg = 10;
   const rotationTmpDeg = Math.random() * (rotationAbsoluteDeg - (-rotationAbsoluteDeg)) - rotationAbsoluteDeg;
   const rotationDeg = imageConfigDict[imageName].rotation ?? rotationTmpDeg;
-  const imagePosition = imageConfigDict[imageName].imagePosition ?? getRandomPosition(windowWidth, windowHeight);
+  const imagePosition = imageConfigDict[imageName].imagePosition ?? getWindowRandomPosition(windowWidth, windowHeight);
   return (
     <CorkboardImage key={imagePath} imageSrc={imagePath} imagePosition={imagePosition} rotation={rotationDeg} />
   );
@@ -51,12 +51,12 @@ const CorkboardPage: FC = () => {
       console.log(event.data);
       const messageData = JSON.parse(event.data);
       const newThumbnailList = viewThumbnailList.concat();
-      if (messageData.imageName) {
+      if (messageData.imageName && !viewThumbnailList.includes(messageData.imageName)) {
         newThumbnailList.push(messageData.imageName);
         setViewImageThumbnailList(newThumbnailList);
       }
     }
-    websocket.addEventListener('message', onMessage);
+    //websocket.addEventListener('message', onMessage);
     // useEffectのクリーンアップの中で、WebSocketのクローズ
     return () => {
       if (websocket.readyState === 1) { // <-- This is important
@@ -74,9 +74,9 @@ const CorkboardPage: FC = () => {
         // まだconfigに存在していないキーの場合、位置情報を追加する
         const rotationAbsoluteDeg = 10;
         const rotationDeg = Math.random() * (rotationAbsoluteDeg - (-rotationAbsoluteDeg)) - rotationAbsoluteDeg;
-        const imagePotision = getRandomPosition(width, height);
+        const imagePosition = getWindowRandomPosition(width, height);
         newImageConfigDict[thumbnail] = {
-          imagePosition: imagePotision,
+          imagePosition: imagePosition,
           rotation: rotationDeg
         };
       }

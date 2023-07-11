@@ -9,6 +9,7 @@ export interface CorkboardImageProps {
 }
 
 export const CorkboardImage: FC<CorkboardImageProps> = ({ imageSrc, imagePosition, rotation }: CorkboardImageProps) => {
+  // Todo: 画像サイズ調整
   const imageStyle: CSSProperties = {
     position: 'absolute',
     transformOrigin: 'top left',
