@@ -46,6 +46,13 @@ export const createHostingCloudFront = (stack: Stack, imageBbucket: Bucket, host
             defaultTtl: Duration.days(0),
             pathPattern: 'thumbnails/*',
           },
+          {
+            isDefaultBehavior: false,
+            minTtl: Duration.seconds(0),
+            maxTtl: Duration.days(0),
+            defaultTtl: Duration.days(0),
+            pathPattern: 'images/*',
+          },
         ],
       }
     ]

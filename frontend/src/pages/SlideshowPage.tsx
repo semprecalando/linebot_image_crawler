@@ -9,13 +9,14 @@ import { ImageConfig } from '../lib/types';
 import { createRandomArrayN, getCellPosition, getRandomPosition } from '../lib/utils';
 
 const MAX_IMAGE_NUM = 8;
+const IMAGE_PX_SIZE = 350;
 
 interface SlideshowImageConfig extends ImageConfig {
   imageName: string
 };
 
 const imageNameReplacer = (substring: string) =>
-  `${CLOUDFRONT_URL}/thumbnails/${substring}`;
+  `${CLOUDFRONT_URL}/images/${substring}`;
 
 const createCardBord = (newSlideshowImageConfigList: SlideshowImageConfig[], index: number, windowWidth: number, windowHeight: number) => {
   const targetImageConfig = newSlideshowImageConfigList[index];
@@ -24,7 +25,7 @@ const createCardBord = (newSlideshowImageConfigList: SlideshowImageConfig[], ind
   const rotationDeg = targetImageConfig.rotation ? targetImageConfig.rotation : Math.random() * (rotationAbsoluteDeg - (-rotationAbsoluteDeg)) - rotationAbsoluteDeg;
   const imagePosition = targetImageConfig.imagePosition ? targetImageConfig.imagePosition : getRandomPosition(windowWidth, windowHeight);
   return (
-    <CorkboardImage key={`${imagePath}${rotationDeg}`} imageSrc={imagePath} imagePosition={imagePosition} rotation={rotationDeg} />
+    <CorkboardImage key={`${imagePath}${rotationDeg}`} imageSrc={imagePath} imagePosition={imagePosition} rotation={rotationDeg} maxSize={IMAGE_PX_SIZE} />
   );
 };
 

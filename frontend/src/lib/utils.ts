@@ -48,9 +48,9 @@ export const getCellPosition = (width: number, height: number, count: number, ma
   const celWidth = width / 4;
   const lineHeight = height / 2;
   // マス目の±20%の範囲でランダムに動かす
-  const minX = celWidth * cel + (celWidth * 0.3);
+  const minX = celWidth * cel + (celWidth * 0.1);
   const minY = lineHeight * line + (lineHeight * 0.1);
-  const maxX = minX + celWidth - (celWidth * 0.3);
-  const maxY = minY + lineHeight - (lineHeight * 0.4);
+  const maxX = minX + celWidth - (celWidth * 0.6);
+  const maxY = minY + lineHeight - (lineHeight * 0.6);
   return getRandomPosition(maxX, maxY, minX, minY);
 }
