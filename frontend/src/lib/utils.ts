@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 export const createRandomArrayN = (arr: any[], n: number) => {
   if (n > arr.length) {
     throw new Error('指定された要素数が配列の長さを超えています');
@@ -54,3 +56,46 @@ export const getCellPosition = (width: number, height: number, count: number, ma
   const maxY = minY + lineHeight - (lineHeight * 0.6);
   return getRandomPosition(maxX, maxY, minX, minY);
 }
+
+export const useTimer = (initialSeconds: number, onTimerEnd?: () => void): { second: number; startTimer: () => void; stopTimer: () => void; resetAndStart: () => void } => {
+  const [second, setSecond] = useState(initialSeconds);
+  const [isActive, setIsActive] = useState(false);
+
+  let intervalId: NodeJS.Timeout;
+
+  const startTimer = () => {
+    setIsActive(true);
+  };
+
+  const stopTimer = () => {
+    setIsActive(false);
+    clearInterval(intervalId);
+  };
+
+  const resetAndStart = () => {
+    stopTimer();
+    setSecond(initialSeconds);
+    startTimer();
+  };
+
+  useEffect(() => {
+    if (isActive) {
+      intervalId = setInterval(() => {
+        setSecond((prevSecond) => {
+          if (prevSecond === 0 && onTimerEnd) {
+            onTimerEnd();
+            return initialSeconds; // リセット後の秒数を返す
+          }
+          return prevSecond - 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(intervalId);
+    }
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isActive]);
+
+  return { second, startTimer, stopTimer, resetAndStart };
+};
