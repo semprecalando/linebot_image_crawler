@@ -99,3 +99,42 @@ export const useTimer = (initialSeconds: number, onTimerEnd?: () => void): { sec
 
   return { second, startTimer, stopTimer, resetAndStart };
 };
+
+export class Queue<T> {
+  private data: T[];
+
+  constructor(initData?: T[]) {
+    this.data = [];
+    if (initData) {
+      this.data = [...initData];
+    }
+  }
+
+  enqueue(item: T): void {
+    this.data.push(item);
+  }
+
+  dequeue(): T | undefined {
+    return this.data.shift();
+  }
+
+  isEmpty(): boolean {
+    return this.data.length === 0;
+  }
+
+  size(): number {
+    return this.data.length;
+  }
+
+  clear(): void {
+    this.data = [];
+  }
+
+  peek(): T | undefined {
+    return this.data[0];
+  }
+
+  toArray(): T[] {
+    return this.data.slice();
+  }
+}

@@ -4,6 +4,7 @@ export interface BackGroundImageProps {
   imageSrc: string;
 }
 
+// Todo: 画像のアスペクト比を可変にする（どのサイズでも画面いっぱいコルクボードにする）
 export const BackGroundImage: FC<BackGroundImageProps> = ({ imageSrc }: BackGroundImageProps) => {
 
   return (

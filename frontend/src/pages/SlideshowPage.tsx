@@ -6,7 +6,7 @@ import { useWindowSize } from '../lib/useWindowsize';
 import { BackGroundImage } from '../components/BackgroundImage';
 import ReconnectingWebSocket from 'reconnecting-websocket'
 import { ImageConfig } from '../lib/types';
-import { createRandomArrayN, getCellPosition, getRandomPosition } from '../lib/utils';
+import { Queue, createRandomArrayN, getCellPosition, getRandomPosition, useTimer } from '../lib/utils';
 
 const MAX_IMAGE_NUM = 8;
 const IMAGE_PX_SIZE = 350;
@@ -31,10 +31,30 @@ const createCardBord = (newSlideshowImageConfigList: SlideshowImageConfig[], ind
 
 const SlideshowPage: FC = () => {
   const [thumbnailList, setThumbnailList] = useState<string[]>([]);
+  const [thumbnailWsQueue, setThumbnailWsQueue] = useState<Queue<string>>(new Queue<string>());
   const [slideshowImageConfigList, setSlideshowImageConfigList] = useState<SlideshowImageConfig[]>([]);
   const [count, setCount] = useState<number>(0);
   const [firstFlag, setFirstFlag] = useState<boolean>(true);
   const [width, height] = useWindowSize();
+
+  const onTimerEnd = () => {
+    if (thumbnailWsQueue.size() > 0) {
+      // キューが空でなければ1つデキューし、新しいthumbnailListを作る
+      // const newImage = newThumbnailWsQueue.dequeue();
+      const newImage = thumbnailWsQueue.dequeue();
+      const newThumbnailList = thumbnailList.concat();
+      if (newImage !== undefined && !thumbnailList.includes(newImage)) {
+        newThumbnailList.push(newImage);
+        setTimeout(() => {
+          setThumbnailList(newThumbnailList);
+        });
+        // setThumbnailWsQueue(newThumbnailWsQueue);
+        // Todo: 一定数以上同時に送られるとデキューできない
+      }
+    }
+  }
+
+  const { second, startTimer, stopTimer, resetAndStart } = useTimer(5, onTimerEnd);
 
   const getImageDataSet = async () => {
     const thumbnailList = await getImageThumbnailList()
@@ -56,26 +76,32 @@ const SlideshowPage: FC = () => {
       console.log('closed');
     });
     const onMessage = (event: MessageEvent<string>) => {
-      console.log(event.data);
       const messageData = JSON.parse(event.data);
-      const newThumbnailList = thumbnailList.concat();
       // ダブっていなければ追加（重複受信対策）
-      if (messageData.imageName && !thumbnailList.includes(messageData.imageName)) {
-        newThumbnailList.push(messageData.imageName);
-        setThumbnailList(newThumbnailList);
+      if (messageData.imageName && !thumbnailList.includes(messageData.imageName) && !thumbnailWsQueue.toArray().includes(messageData.imageName)) {
+        //newThumbnailList.push(messageData.imageName);
+        //setThumbnailList(newThumbnailList);
+        // wsキューに画像追加
+        //newThumbnailWsQueue.enqueue(messageData.imageName);
+        //setThumbnailWsQueue(newThumbnailWsQueue);
+        thumbnailWsQueue.enqueue(messageData.imageName);
       }
     }
     websocket.addEventListener('message', onMessage);
+    // 自動でリセットするタイマーを起動
+    startTimer();
     // useEffectのクリーンアップの中で、WebSocketのクローズ
     return () => {
       if (websocket.readyState === 1) { // <-- This is important
         websocket.close();
         websocket.removeEventListener('message', onMessage);
+        stopTimer();
       }
     }
   },[]);
 
   // Todo: なぜか同じ画像が0番に来る問題の解決（おそらくuseEffectが2回呼ばれている）
+  // ランダムに画像を総入れ替え
   useEffect(() => {
     if(firstFlag && thumbnailList.length > 0) {
       console.log("first");
@@ -98,7 +124,6 @@ const SlideshowPage: FC = () => {
         const newCount = newSlideshowImageConfigList.length;
         setCount(newCount >= MAX_IMAGE_NUM - 1 ? 0 : newCount);
       }
-      console.log(newSlideshowImageConfigList);
       setSlideshowImageConfigList(newSlideshowImageConfigList);
     }
     else if (thumbnailList.length > 0) {
@@ -114,7 +139,6 @@ const SlideshowPage: FC = () => {
           imagePosition: imagePosition,
           rotation: rotationDeg
         };
-        console.log(newSlideshowImageConfigList);
         setSlideshowImageConfigList(newSlideshowImageConfigList);
         const newCount = count >= (MAX_IMAGE_NUM - 1) ? 0 : count + 1;
         setCount(newCount);
